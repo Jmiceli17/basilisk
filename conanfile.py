@@ -31,7 +31,8 @@ bskModuleOptionsString = {
 }
 bskModuleOptionsFlag = {
     "clean": False,
-    "allOptPkg": False
+    "allOptPkg": False,
+    "docker" : False
 }
 
 # this statement is needed to enable Windows to print ANSI codes in the Terminal
@@ -288,14 +289,17 @@ class BasiliskConan(ConanFile):
         add_basilisk_module_command = [sys.executable, "-m", "pip", "install", "-e", "."]
         if not is_running_virtual_env() and self.options.autoKey != 's':
             add_basilisk_module_command.append("--user")
-
-        process = subprocess.Popen(add_basilisk_module_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, err = process.communicate()
-        if err:
-            print("Error %s while running %s" % (err.decode(), add_basilisk_module_command))
-            sys.exit(1)
-        else:
-            print("This resulted in the output: \n%s" % output.decode())
+        if self.options.docker:
+            # Docker does not like returning anything from this function call for some reason
+            subprocess.Popen(add_basilisk_module_command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE) 
+        else: 
+            process = subprocess.Popen(add_basilisk_module_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, err = process.communicate()
+            if err:
+                print("Error %s while running %s" % (err.decode(), add_basilisk_module_command))
+                sys.exit(1)
+            else:
+                print("This resulted in the output: \n%s" % output.decode())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Configure the Basilisk framework.")
